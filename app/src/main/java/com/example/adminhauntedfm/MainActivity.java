@@ -1,26 +1,34 @@
 package com.example.adminhauntedfm;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.ListView;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
@@ -29,10 +37,9 @@ public class MainActivity extends AppCompatActivity {
     private CollectionReference playlistCollection;
     private EditText playlistNameEditText;
     private EditText playlistDescriptionEditText;
-    private ListView playlistListView;
-    private ArrayAdapter<String> playlistAdapter;
-    private ArrayList<String> playlistNames;
-    private ArrayList<String> playlistIds;
+    private RecyclerView playlistRecyclerView;
+    private PlaylistAdapter playlistAdapter;
+    private List<Playlist> playlistList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,9 +50,10 @@ public class MainActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         playlistCollection = db.collection("playlists");
 
+
         playlistNameEditText = findViewById(R.id.playlistNameEditText);
         playlistDescriptionEditText = findViewById(R.id.playlistDescriptionEditText);
-        playlistListView = findViewById(R.id.playlistListView);
+        playlistRecyclerView = findViewById(R.id.playlistRecyclerView);
 
         Button addButton = findViewById(R.id.addButton);
         addButton.setOnClickListener(new View.OnClickListener() {
@@ -54,52 +62,36 @@ public class MainActivity extends AppCompatActivity {
                 addPlaylist();
             }
         });
+        Button refreshButton = findViewById(R.id.refreshButton);
+        refreshButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loadPlaylists();
+            }
+        });
 
         // Initialize playlist data
-        playlistNames = new ArrayList<>();
-        playlistIds = new ArrayList<>();
-        playlistAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, playlistNames);
-        playlistListView.setAdapter(playlistAdapter);
+        playlistList = new ArrayList<>();
+        playlistAdapter = new PlaylistAdapter(playlistList);
+        playlistRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        playlistRecyclerView.setAdapter(playlistAdapter);
 
         // Load existing playlists
         loadPlaylists();
 
         // Set click listeners for list items
-        playlistListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        playlistAdapter.setOnItemClickListener(new PlaylistAdapter.OnItemClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                String playlistId = playlistIds.get(position);
-                String playlistName = playlistNames.get(position);
+            public void onEditClick(int position) {
+                Playlist playlist = playlistList.get(position);
+                editPlaylist(playlist);
+                Toast.makeText(MainActivity.this, "Edit clicked for Playlist: " + playlist.getName(), Toast.LENGTH_SHORT).show();
+            }
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("Playlist Options");
-                builder.setMessage("Playlist: " + playlistName);
-                builder.setPositiveButton("Edit", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        editPlaylist(playlistId, playlistName);
-                        Toast.makeText(MainActivity.this, "Edit clicked for Playlist: " + playlistName, Toast.LENGTH_SHORT).show();
-                    }
-                });
-                builder.setNegativeButton("Delete", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        AlertDialog.Builder deleteConfirmationBuilder = new AlertDialog.Builder(MainActivity.this);
-                        deleteConfirmationBuilder.setTitle("Delete Playlist");
-                        deleteConfirmationBuilder.setMessage("Are you sure you want to delete the playlist '" + playlistName + "'?");
-                        deleteConfirmationBuilder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                deletePlaylist(playlistId);
-                            }
-                        });
-                        deleteConfirmationBuilder.setNegativeButton("Cancel", null);
-                        deleteConfirmationBuilder.show();
-                    }
-                });
-                builder.show();
-
-                return true;
+            @Override
+            public void onDeleteClick(int position) {
+                Playlist playlist = playlistList.get(position);
+                deletePlaylist(playlist);
             }
         });
     }
@@ -122,17 +114,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Create a new playlist object
-        Map<String, Object> playlistData = new HashMap<>();
-        playlistData.put("name", name);
-        playlistData.put("description", description);
+        Playlist playlist = new Playlist(name, description);
 
         // Add the playlist to Firestore
-        playlistCollection.add(playlistData)
+        playlistCollection.add(playlist)
                 .addOnSuccessListener(documentReference -> {
                     // Playlist added successfully
-                    String playlistId = documentReference.getId();
-                    playlistIds.add(playlistId);
-                    playlistNames.add(name);
+                    playlist.setId(documentReference.getId());
+                    playlistList.add(playlist);
                     playlistAdapter.notifyDataSetChanged();
                     playlistNameEditText.setText("");
                     playlistDescriptionEditText.setText("");
@@ -143,15 +132,13 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private void deletePlaylist(String playlistId) {
+    private void deletePlaylist(Playlist playlist) {
         // Delete the playlist from Firestore
-        playlistCollection.document(playlistId)
+        playlistCollection.document(playlist.getId())
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     // Playlist deleted successfully
-                    int index = playlistIds.indexOf(playlistId);
-                    playlistIds.remove(index);
-                    playlistNames.remove(index);
+                    playlistList.remove(playlist);
                     playlistAdapter.notifyDataSetChanged();
                     Toast.makeText(MainActivity.this, "Playlist deleted", Toast.LENGTH_SHORT).show();
                 })
@@ -163,13 +150,14 @@ public class MainActivity extends AppCompatActivity {
     private void loadPlaylists() {
         playlistCollection.get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    playlistNames.clear();
-                    playlistIds.clear();
+                    playlistList.clear();
                     for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
                         String playlistId = documentSnapshot.getId();
                         String playlistName = documentSnapshot.getString("name");
-                        playlistIds.add(playlistId);
-                        playlistNames.add(playlistName);
+                        String playlistDescription = documentSnapshot.getString("description");
+                        Playlist playlist = new Playlist(playlistName, playlistDescription);
+                        playlist.setId(playlistId);
+                        playlistList.add(playlist);
                     }
                     playlistAdapter.notifyDataSetChanged();
                 })
@@ -178,8 +166,8 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private void editPlaylist(String playlistId, String playlistName) {
-        playlistCollection.document(playlistId)
+    private void editPlaylist(Playlist playlist) {
+        playlistCollection.document(playlist.getId())
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     // Get the playlist data
@@ -190,17 +178,14 @@ public class MainActivity extends AppCompatActivity {
                     AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                     builder.setTitle("Edit Playlist");
 
-                    // Initialize the dialog views
-                    final EditText editPlaylistNameEditText = new EditText(MainActivity.this);
+                    // Inflate the dialog layout
+                    View editDialogView = getLayoutInflater().inflate(R.layout.dialog_edit_playlist, null);
+                    EditText editPlaylistNameEditText = editDialogView.findViewById(R.id.editPlaylistNameEditText);
+                    EditText editPlaylistDescriptionEditText = editDialogView.findViewById(R.id.editPlaylistDescriptionEditText);
                     editPlaylistNameEditText.setText(name);
-                    final EditText editPlaylistDescriptionEditText = new EditText(MainActivity.this);
                     editPlaylistDescriptionEditText.setText(description);
 
-                    LinearLayout dialogLayout = new LinearLayout(MainActivity.this);
-                    dialogLayout.setOrientation(LinearLayout.VERTICAL);
-                    dialogLayout.addView(editPlaylistNameEditText);
-                    dialogLayout.addView(editPlaylistDescriptionEditText);
-                    builder.setView(dialogLayout);
+                    builder.setView(editDialogView);
 
                     // Set click listener for cancel button
                     builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -220,7 +205,9 @@ public class MainActivity extends AppCompatActivity {
                             String updatedDescription = editPlaylistDescriptionEditText.getText().toString().trim();
 
                             // Update the playlist details in Firestore
-                            updatePlaylist(playlistId, updatedName, updatedDescription);
+                            playlist.setName(updatedName);
+                            playlist.setDescription(updatedDescription);
+                            updatePlaylist(playlist);
                         }
                     });
 
@@ -234,10 +221,10 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private void updatePlaylist(String playlistId, String updatedName, String updatedDescription) {
+    private void updatePlaylist(Playlist playlist) {
         // Update the playlist details in Firestore
-        playlistCollection.document(playlistId)
-                .update("name", updatedName, "description", updatedDescription)
+        playlistCollection.document(playlist.getId())
+                .update("name", playlist.getName(), "description", playlist.getDescription())
                 .addOnSuccessListener(aVoid -> {
                     // Playlist updated successfully
                     Toast.makeText(MainActivity.this, "Playlist updated", Toast.LENGTH_SHORT).show();
@@ -248,6 +235,82 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    private static class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.PlaylistViewHolder> {
 
+        private List<Playlist> playlistList;
+        private OnItemClickListener clickListener;
 
+        public interface OnItemClickListener {
+            void onEditClick(int position);
+            void onDeleteClick(int position);
+        }
+
+        public PlaylistAdapter(List<Playlist> playlistList) {
+            this.playlistList = playlistList;
+        }
+
+        public void setOnItemClickListener(OnItemClickListener listener) {
+            this.clickListener = listener;
+        }
+
+        @NonNull
+        @Override
+        public PlaylistViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_playlist, parent, false);
+            return new PlaylistViewHolder(view, clickListener);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull PlaylistViewHolder holder, int position) {
+            Playlist playlist = playlistList.get(position);
+            holder.playlistNameTextView.setText(playlist.getName());
+            holder.playlistDescriptionTextView.setText(playlist.getDescription());
+        }
+
+        @Override
+        public int getItemCount() {
+            return playlistList.size();
+        }
+
+        public static class PlaylistViewHolder extends RecyclerView.ViewHolder {
+
+            public TextView playlistNameTextView;
+            public TextView playlistDescriptionTextView;
+            public ImageView editImageView;
+            public ImageView deleteImageView;
+
+            public PlaylistViewHolder(@NonNull View itemView, final OnItemClickListener listener) {
+                super(itemView);
+
+                playlistNameTextView = itemView.findViewById(R.id.playlistNameTextView);
+                playlistDescriptionTextView = itemView.findViewById(R.id.playlistDescriptionTextView);
+                editImageView = itemView.findViewById(R.id.editImageView);
+                deleteImageView = itemView.findViewById(R.id.deleteImageView);
+
+                editImageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (listener != null) {
+                            int position = getAdapterPosition();
+                            if (position != RecyclerView.NO_POSITION) {
+                                listener.onEditClick(position);
+                            }
+                        }
+                    }
+                });
+
+                deleteImageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (listener != null) {
+                            int position = getAdapterPosition();
+                            if (position != RecyclerView.NO_POSITION) {
+                                listener.onDeleteClick(position);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }
 }

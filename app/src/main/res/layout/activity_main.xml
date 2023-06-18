@@ -1,34 +1,53 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- activity_main.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    tools:context=".MainActivity">
+    android:orientation="vertical">
 
-    <EditText
-        android:id="@+id/playlistNameEditText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Playlist Name" />
+        android:orientation="horizontal"
+        android:padding="16dp">
 
-    <EditText
-        android:id="@+id/playlistDescriptionEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Playlist Description" />
+        <EditText
+            android:id="@+id/playlistNameEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Playlist Name"
+            android:inputType="text"
+            android:maxLines="1" />
 
+        <EditText
+            android:id="@+id/playlistDescriptionEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:hint="Playlist Description"
+            android:inputType="text"
+            android:maxLines="1" />
+
+        <Button
+            android:id="@+id/addButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add" />
+
+    </LinearLayout>
     <Button
-        android:id="@+id/addButton"
-        android:layout_width="match_parent"
+        android:id="@+id/refreshButton"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Add Playlist" />
-
-    <ListView
-        android:id="@+id/playlistListView"
+        android:layout_gravity="left"
+        android:backgroundTint="@color/white"
+        android:layout_marginTop="16dp"
+        android:drawableLeft="@drawable/baseline_refresh_24"
+        android:layout_marginBottom="16dp" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/playlistRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="480dp"
-        android:layout_marginTop="16dp" />
+        android:layout_height="match_parent" />
 
 </LinearLayout>
