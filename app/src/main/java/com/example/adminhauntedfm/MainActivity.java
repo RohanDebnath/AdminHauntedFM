@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -34,6 +35,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -273,7 +275,6 @@ private void loadPlaylists() {
             });
 }
 
-
     private void editPlaylist(Playlist playlist) {
         playlistCollection.document(playlist.getId())
                 .get()
@@ -281,20 +282,38 @@ private void loadPlaylists() {
                     // Get the playlist data
                     String name = documentSnapshot.getString("name");
                     String description = documentSnapshot.getString("description");
+                    String imageUrl = documentSnapshot.getString("imageUrl"); // Get the current image URL
 
                     // Create the edit dialog
                     AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                     builder.setTitle("Edit Playlist");
 
-
                     // Inflate the dialog layout
                     View editDialogView = getLayoutInflater().inflate(R.layout.dialog_edit_playlist, null);
                     EditText editPlaylistNameEditText = editDialogView.findViewById(R.id.editPlaylistNameEditText);
                     EditText editPlaylistDescriptionEditText = editDialogView.findViewById(R.id.editPlaylistDescriptionEditText);
+                    Button editBtnSelectImage = editDialogView.findViewById(R.id.selectImageButton);
+                    ImageView editImageViewPlaylist = editDialogView.findViewById(R.id.editPlaylistImageView);
 
                     // Set the current playlist details in the EditText fields
                     editPlaylistNameEditText.setText(name);
                     editPlaylistDescriptionEditText.setText(description);
+
+                    // Load the playlist image using Glide library
+                    Glide.with(this)
+                            .load(playlist.getImageUrl())
+                            .placeholder(R.drawable.ic_launcher_foreground)
+                            .error(R.drawable.ic_launcher_foreground)
+                            .into(editImageViewPlaylist);
+
+
+                    // Set click listener for the "Select Image" button
+                    editBtnSelectImage.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            openImageSelector(); // Pass a different request code to differentiate from adding a new playlist image
+                        }
+                    });
 
                     builder.setView(editDialogView);
 
@@ -316,7 +335,6 @@ private void loadPlaylists() {
                             String updatedName = editPlaylistNameEditText.getText().toString().trim();
                             String updatedDescription = editPlaylistDescriptionEditText.getText().toString().trim();
 
-
                             // Update the playlist details in Firestore
                             playlist.setName(updatedName);
                             playlist.setDescription(updatedDescription);
@@ -325,19 +343,75 @@ private void loadPlaylists() {
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                                         @Override
                                         public void onSuccess(Void aVoid) {
-                                            // Playlist updated successfully
+                                            // Playlist details updated successfully
                                             Toast.makeText(MainActivity.this, "Playlist updated", Toast.LENGTH_SHORT).show();
-                                            editDialog.dismiss(); // Dismiss the edit dialog after successful update
+
+                                            if (selectedImageUri != null) {
+                                                // Upload the new image to Firebase Storage
+                                                String imageName = "playlist_" + playlist.getId();
+                                                StorageReference imageRef = FirebaseStorage.getInstance().getReference().child("images/" + imageName);
+
+                                                imageRef.putFile(selectedImageUri)
+                                                        .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                                            @Override
+                                                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                                                // Image upload successful, get the updated image URL
+                                                                imageRef.getDownloadUrl()
+                                                                        .addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                                                            @Override
+                                                                            public void onSuccess(Uri uri) {
+                                                                                String updatedImageUrl = uri.toString();
+                                                                                playlist.setImageUrl(updatedImageUrl); // Set the updated image URL in the playlist object
+
+                                                                                // Update the image URL in Firestore
+                                                                                playlistCollection.document(playlist.getId())
+                                                                                        .update("imageUrl", updatedImageUrl)
+                                                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                                            @Override
+                                                                                            public void onSuccess(Void aVoid) {
+                                                                                                // Image URL updated successfully
+                                                                                                Toast.makeText(MainActivity.this, "Image updated", Toast.LENGTH_SHORT).show();
+                                                                                                editDialog.dismiss(); // Dismiss the edit dialog after successful update
+                                                                                            }
+                                                                                        })
+                                                                                        .addOnFailureListener(new OnFailureListener() {
+                                                                                            @Override
+                                                                                            public void onFailure(@NonNull Exception e) {
+                                                                                                // Error occurred while updating the image URL
+                                                                                                Toast.makeText(MainActivity.this, "Error updating image URL: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                                                            }
+                                                                                        });
+                                                                            }
+                                                                        })
+                                                                        .addOnFailureListener(new OnFailureListener() {
+                                                                            @Override
+                                                                            public void onFailure(@NonNull Exception e) {
+                                                                                // Error occurred while getting the updated image URL
+                                                                                Toast.makeText(MainActivity.this, "Error getting updated image URL: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                                            }
+                                                                        });
+                                                            }
+                                                        })
+                                                        .addOnFailureListener(new OnFailureListener() {
+                                                            @Override
+                                                            public void onFailure(@NonNull Exception e) {
+                                                                // Error occurred while uploading the new image
+                                                                Toast.makeText(MainActivity.this, "Error uploading new image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                            }
+                                                        });
+                                            } else {
+                                                // No new image selected, simply dismiss the dialog
+                                                editDialog.dismiss();
+                                            }
                                         }
                                     })
                                     .addOnFailureListener(new OnFailureListener() {
                                         @Override
                                         public void onFailure(@NonNull Exception e) {
-                                            // Error occurred while updating the playlist
+                                            // Error occurred while updating the playlist details
                                             Toast.makeText(MainActivity.this, "Error updating playlist: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                         }
                                     });
-
                         }
                     });
 
@@ -350,6 +424,7 @@ private void loadPlaylists() {
                     Toast.makeText(MainActivity.this, "Error retrieving playlist details: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
+
 
 
 }
