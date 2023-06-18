@@ -36,6 +36,21 @@
             android:text="Add" />
 
     </LinearLayout>
+    <ImageView
+        android:id="@+id/imageViewPlaylist"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_launcher_foreground"
+        />
+
+    <!-- Button for Image Selection -->
+    <Button
+        android:id="@+id/btnSelectImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select Image"
+        />
     <Button
         android:id="@+id/refreshButton"
         android:layout_width="wrap_content"

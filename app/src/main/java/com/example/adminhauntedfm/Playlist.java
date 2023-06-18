@@ -1,12 +1,16 @@
 package com.example.adminhauntedfm;
 
+import android.graphics.drawable.Drawable;
+
 public class Playlist {
     private String id;
     private String name;
     private String description;
+    private String imageUrl;
+    private Drawable imageDrawable;
+
 
     public Playlist() {
-        // Default constructor required for Firestore serialization
     }
 
     public Playlist(String name, String description) {
@@ -22,19 +26,35 @@ public class Playlist {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public Drawable getImageDrawable() {
+        return imageDrawable;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setImageDrawable(Drawable imageDrawable) {
+        this.imageDrawable = imageDrawable;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public String getDescription() {
         return description;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

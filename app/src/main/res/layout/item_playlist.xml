@@ -1,41 +1,53 @@
-<!-- item_playlist.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="16dp">
 
+    <ImageView
+        android:id="@+id/playlistImageView"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:scaleType="centerCrop" />
+
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_marginStart="16dp">
 
         <TextView
             android:id="@+id/playlistNameTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:textAppearanceMedium" />
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/playlistDescriptionTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:textAppearanceSmall" />
+            android:textSize="14sp"
+            android:textColor="@android:color/darker_gray" />
 
     </LinearLayout>
 
     <ImageView
         android:id="@+id/editImageView"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:src="@drawable/baseline_edit_24" />
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/baseline_edit_24"
+        android:clickable="true"
+        android:focusable="true" />
 
     <ImageView
         android:id="@+id/deleteImageView"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginStart="16dp"
-        android:src="@drawable/baseline_delete_forever_24" />
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/baseline_delete_forever_24"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_marginStart="8dp" />
 
 </LinearLayout>

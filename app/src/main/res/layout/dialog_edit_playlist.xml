@@ -1,25 +1,55 @@
-<!-- dialog_edit_playlist.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/editPlaylistTitleTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Edit Playlist"
+        android:textAppearance="?android:textAppearanceMedium"
+        android:gravity="center"
+        android:padding="16dp" />
 
     <EditText
         android:id="@+id/editPlaylistNameEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Playlist Name"
-        android:inputType="text"
-        android:maxLines="1" />
+        android:hint="Enter playlist name"
+        android:padding="16dp" />
 
     <EditText
         android:id="@+id/editPlaylistDescriptionEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="Playlist Description"
-        android:inputType="text"
-        android:maxLines="1" />
+        android:hint="Enter playlist description"
+        android:padding="16dp" />
+
+    <TextView
+        android:id="@+id/editPlaylistImageTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Edit Playlist Image"
+        android:textAppearance="?android:textAppearanceMedium"
+        android:gravity="center"
+        android:padding="16dp" />
+
+    <ImageView
+        android:id="@+id/editPlaylistImageView"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:scaleType="centerCrop"
+        android:layout_gravity="center"
+        android:padding="16dp"
+        android:src="@drawable/ic_launcher_foreground" />
+
+    <Button
+        android:id="@+id/selectImageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select Image"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp" />
 
 </LinearLayout>
