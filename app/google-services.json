@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "244109374260",
+    "project_id": "fmplayer-5cca1",
+    "storage_bucket": "fmplayer-5cca1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:244109374260:android:2643defc81cdcb19e56b61",
+        "android_client_info": {
+          "package_name": "com.example.adminhauntedfm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "244109374260-76ndbdqpjaaab3qr0ojvf4jj8i17th75.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNMK8NRttMZHLIySpWUkkvWKauJFESsDo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "244109374260-76ndbdqpjaaab3qr0ojvf4jj8i17th75.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
