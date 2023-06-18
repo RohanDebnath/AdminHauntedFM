@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Playlist> playlistList;
     private ImageView imageViewPlaylist;
     private Uri selectedImageUri;
-    private Button btnSelectImage;
+    private Button btnSelectImage,editButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -225,26 +225,6 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Error deleting playlist: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
-
-//    private void loadPlaylists() {
-//        playlistCollection.get()
-//                .addOnSuccessListener(queryDocumentSnapshots -> {
-//                    playlistList.clear();
-//                    for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-//                        String playlistId = documentSnapshot.getId();
-//                        String playlistName = documentSnapshot.getString("name");
-//                        String playlistDescription = documentSnapshot.getString("description");
-//                        Playlist playlist = new Playlist(playlistName, playlistDescription);
-//                        playlist.setId(playlistId);
-//                        playlistList.add(playlist);
-//
-//                    }
-//                    playlistAdapter.notifyDataSetChanged();
-//                })
-//                .addOnFailureListener(e -> {
-//                    Toast.makeText(MainActivity.this, "Error loading playlists: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-//                });
-//    }
 private void loadPlaylists() {
     playlistCollection.get()
             .addOnSuccessListener(queryDocumentSnapshots -> {
@@ -306,6 +286,7 @@ private void loadPlaylists() {
                     AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                     builder.setTitle("Edit Playlist");
 
+
                     // Inflate the dialog layout
                     View editDialogView = getLayoutInflater().inflate(R.layout.dialog_edit_playlist, null);
                     EditText editPlaylistNameEditText = editDialogView.findViewById(R.id.editPlaylistNameEditText);
@@ -334,6 +315,7 @@ private void loadPlaylists() {
                             final AlertDialog editDialog = builder.create();
                             String updatedName = editPlaylistNameEditText.getText().toString().trim();
                             String updatedDescription = editPlaylistDescriptionEditText.getText().toString().trim();
+
 
                             // Update the playlist details in Firestore
                             playlist.setName(updatedName);
