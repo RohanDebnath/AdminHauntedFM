@@ -5,13 +5,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+
 public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.ViewHolder> {
     private Context context;
     private List<AudioItem> audioItems;
@@ -36,6 +36,13 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.ViewHolder> 
 
         holder.audioNameTextView.setText(audioItem.getAudioName());
         holder.audioDescriptionTextView.setText(audioItem.getAudioDescription());
+
+        if (audioItem.getAudioFileUrl() != null) {
+            holder.audioFileUrlTextView.setVisibility(View.VISIBLE);
+            holder.audioFileUrlTextView.setText(audioItem.getAudioFileUrl());
+        } else {
+            holder.audioFileUrlTextView.setVisibility(View.GONE);
+        }
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,6 +74,7 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.ViewHolder> 
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView audioNameTextView;
         TextView audioDescriptionTextView;
+        TextView audioFileUrlTextView;
         Button editButton;
         Button deleteButton;
 
@@ -74,6 +82,7 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.ViewHolder> 
             super(itemView);
             audioNameTextView = itemView.findViewById(R.id.audioNameTextView);
             audioDescriptionTextView = itemView.findViewById(R.id.audioDescriptionTextView);
+            audioFileUrlTextView = itemView.findViewById(R.id.audioFileUrlTextView);
             editButton = itemView.findViewById(R.id.editButton);
             deleteButton = itemView.findViewById(R.id.deleteButton);
         }
@@ -81,7 +90,9 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.ViewHolder> 
 
     public interface OnItemClickListener {
         void onItemClick(AudioItem audioItem);
+
         void onEditClick(AudioItem audioItem);
+
         void onDeleteClick(AudioItem audioItem);
     }
 }

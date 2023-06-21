@@ -26,9 +26,6 @@ public class Playlist {
         this.id = id;
     }
 
-    public Drawable getImageDrawable() {
-        return imageDrawable;
-    }
 
     public void setImageDrawable(Drawable imageDrawable) {
         this.imageDrawable = imageDrawable;

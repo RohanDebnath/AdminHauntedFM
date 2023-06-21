@@ -31,8 +31,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 public class DashboardActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
-    private static final int REQUEST_CODE_AUDIO =1 ;
+    private static final int REQUEST_CODE_AUDIO = 1;
     private Spinner playlistSpinner;
     private EditText audioNameEditText, audioDescriptionEditText;
     private Button selectAudioButton, uploadButton;
@@ -185,7 +186,7 @@ public class DashboardActivity extends AppCompatActivity implements AdapterView.
                             // Upload the audio item to the selected playlist
                             firebaseFirestore.collection("playlists")
                                     .document(playlistId)
-                                    .collection("imageDrawable")
+                                    .collection("audioFiles")
                                     .add(audioItem)
                                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                         @Override
@@ -233,7 +234,7 @@ public class DashboardActivity extends AppCompatActivity implements AdapterView.
                             // Load audio items from the selected playlist
                             firebaseFirestore.collection("playlists")
                                     .document(playlistId)
-                                    .collection("imageDrawable")
+                                    .collection("audioFiles")
                                     .get()
                                     .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                                         @Override

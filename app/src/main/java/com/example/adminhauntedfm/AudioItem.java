@@ -4,6 +4,7 @@ public class AudioItem {
     private String audioName;
     private String audioDescription;
     private String audioFilePath;
+    private String audioFileUrl;
 
     public AudioItem() {
         // Default constructor required for Firestore deserialization
@@ -37,5 +38,13 @@ public class AudioItem {
 
     public void setAudioFilePath(String audioFilePath) {
         this.audioFilePath = audioFilePath;
+    }
+
+    public String getAudioFileUrl() {
+        return audioFileUrl;
+    }
+
+    public void setAudioFileUrl(String audioFileUrl) {
+        this.audioFileUrl = audioFileUrl;
     }
 }
