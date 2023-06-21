@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Playlist> playlistList;
     private ImageView imageViewPlaylist;
     private Uri selectedImageUri;
-    private Button btnSelectImage,editButton;
+    private Button btnSelectImage,Dashboard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +69,15 @@ public class MainActivity extends AppCompatActivity {
         playlistRecyclerView = findViewById(R.id.playlistRecyclerView);
         imageViewPlaylist = findViewById(R.id.imageViewPlaylist);
         btnSelectImage = findViewById(R.id.btnSelectImage);
+        Dashboard=findViewById(R.id.dahboard);
+
+        Dashboard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent= new Intent(MainActivity.this,DashboardActivity.class);
+                startActivity(intent);
+            }
+        });
         btnSelectImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -424,7 +433,6 @@ private void loadPlaylists() {
                     Toast.makeText(MainActivity.this, "Error retrieving playlist details: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
-
 
 
 }
