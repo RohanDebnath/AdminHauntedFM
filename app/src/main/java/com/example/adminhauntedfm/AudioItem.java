@@ -1,6 +1,7 @@
 package com.example.adminhauntedfm;
 
 public class AudioItem {
+    private String id;
     private String audioName;
     private String audioDescription;
     private String audioFilePath;
@@ -14,6 +15,15 @@ public class AudioItem {
         this.audioName = audioName;
         this.audioDescription = audioDescription;
         this.audioFilePath = audioFilePath;
+    }
+
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getAudioName() {

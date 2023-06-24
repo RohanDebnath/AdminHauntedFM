@@ -137,8 +137,6 @@ public class DashboardActivity extends AppCompatActivity implements AdapterView.
             // Get the selected audio file path
             Uri audioUri = data.getData();
             selectedAudioFilePath = getFilePathFromUri(audioUri);
-
-            // Do something with the selected audio file path
             // For example, display the file path in a TextView
             TextView selectedAudioTextView = findViewById(R.id.selectedAudioTextView);
             selectedAudioTextView.setText(selectedAudioFilePath);
