@@ -13,6 +13,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,17 +30,21 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class DashboardActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     private static final int REQUEST_CODE_AUDIO = 1;
     private Spinner playlistSpinner;
     private EditText audioNameEditText, audioDescriptionEditText;
-    private Button selectAudioButton, uploadButton, refreshbutton;
+    private Button selectAudioButton, uploadButton;
     private RecyclerView recyclerView;
 
     private FirebaseFirestore firebaseFirestore;
@@ -50,6 +55,8 @@ public class DashboardActivity extends AppCompatActivity implements AdapterView.
 
     private String selectedPlaylist;
     private String selectedAudioFilePath;
+
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +70,7 @@ public class DashboardActivity extends AppCompatActivity implements AdapterView.
         selectAudioButton = findViewById(R.id.selectAudioButton);
         uploadButton = findViewById(R.id.uploadAudioButton);
         recyclerView = findViewById(R.id.audioRecyclerView);
+        progressBar=findViewById(R.id.progressbar2);
 
         // Set up RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -173,60 +181,79 @@ public class DashboardActivity extends AppCompatActivity implements AdapterView.
     }
 
     private void uploadAudio(String audioName, String audioDescription) {
-        // Get the selected playlist document ID
-        firebaseFirestore.collection("playlists")
-                .whereEqualTo("name", selectedPlaylist)
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                    @Override
-                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                        if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
-                            String playlistId = queryDocumentSnapshots.getDocuments().get(0).getId();
+        progressBar.setVisibility(View.VISIBLE);
 
-                            // Create a new AudioItem object with the given name and description
-                            AudioItem audioItem = new AudioItem(audioName, audioDescription, selectedAudioFilePath);
+        // Create a reference to the Firebase Storage
+        StorageReference storageRef = FirebaseStorage.getInstance().getReference();
 
-                            // Generate a unique ID for the audio item
-                            String audioItemId = firebaseFirestore.collection("playlists")
-                                    .document(playlistId)
-                                    .collection("audioFiles")
-                                    .document().getId();
+        // Create a reference to the audio file in Firebase Storage
+        StorageReference audioFileRef = storageRef.child("audioFiles/" + UUID.randomUUID().toString() + ".mp3");
 
-                            // Set the generated ID for the audio item
-                            audioItem.setId(audioItemId);
+        // Get the URI of the selected audio file
+        Uri audioFileUri = Uri.fromFile(new File(selectedAudioFilePath));
 
-                            // Upload the audio item to the selected playlist
-                            firebaseFirestore.collection("playlists")
-                                    .document(playlistId)
-                                    .collection("audioFiles")
-                                    .document(audioItemId)
-                                    .set(audioItem)
-                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void aVoid) {
-                                            Toast.makeText(DashboardActivity.this, "Audio uploaded successfully", Toast.LENGTH_SHORT).show();
-                                            audioNameEditText.setText("");
-                                            audioDescriptionEditText.setText("");
-                                            selectedAudioFilePath = null;
-                                            TextView selectedAudioTextView = findViewById(R.id.selectedAudioTextView);
-                                            selectedAudioTextView.setText("");
-                                            loadAudioItems();
-                                        }
-                                    })
-                                    .addOnFailureListener(new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception e) {
-                                            Toast.makeText(DashboardActivity.this, "Failed to upload audio", Toast.LENGTH_SHORT).show();
-                                        }
-                                    });
-                        }
-                    }
+        // Upload the audio file to Firebase Storage
+        audioFileRef.putFile(audioFileUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    // Get the download URL of the uploaded audio file
+                    audioFileRef.getDownloadUrl()
+                            .addOnSuccessListener(uri -> {
+                                // Create a new AudioItem object with the given name, description, and file URL
+                                AudioItem audioItem = new AudioItem(audioName, audioDescription, selectedAudioFilePath);
+                                audioItem.setAudioFileUrl(uri.toString());
+
+                                // Get the selected playlist document ID
+                                firebaseFirestore.collection("playlists")
+                                        .whereEqualTo("name", selectedPlaylist)
+                                        .get()
+                                        .addOnSuccessListener(queryDocumentSnapshots -> {
+                                            if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                                                String playlistId = queryDocumentSnapshots.getDocuments().get(0).getId();
+
+                                                // Generate a unique ID for the audio item
+                                                String audioItemId = firebaseFirestore.collection("playlists")
+                                                        .document(playlistId)
+                                                        .collection("audioFiles")
+                                                        .document().getId();
+
+                                                // Set the generated ID for the audio item
+                                                audioItem.setId(audioItemId);
+
+                                                // Upload the audio item to the selected playlist
+                                                firebaseFirestore.collection("playlists")
+                                                        .document(playlistId)
+                                                        .collection("audioFiles")
+                                                        .document(audioItemId)
+                                                        .set(audioItem)
+                                                        .addOnSuccessListener(aVoid -> {
+                                                            Toast.makeText(DashboardActivity.this, "Audio uploaded successfully", Toast.LENGTH_SHORT).show();
+                                                            audioNameEditText.setText("");
+                                                            audioDescriptionEditText.setText("");
+                                                            selectedAudioFilePath = null;
+                                                            TextView selectedAudioTextView = findViewById(R.id.selectedAudioTextView);
+                                                            selectedAudioTextView.setText("");
+                                                            loadAudioItems();
+                                                            progressBar.setVisibility(View.GONE);
+                                                        })
+                                                        .addOnFailureListener(e -> {
+                                                            Toast.makeText(DashboardActivity.this, "Failed to upload audio", Toast.LENGTH_SHORT).show();
+                                                            progressBar.setVisibility(View.GONE);
+                                                        });
+                                            }
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Toast.makeText(DashboardActivity.this, "Failed to get playlist ID", Toast.LENGTH_SHORT).show();
+                                            progressBar.setVisibility(View.GONE);
+                                        });
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(DashboardActivity.this, "Failed to get audio file URL", Toast.LENGTH_SHORT).show();
+                                progressBar.setVisibility(View.GONE);
+                            });
                 })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(DashboardActivity.this, "Failed to get playlist ID", Toast.LENGTH_SHORT).show();
-                    }
+                .addOnFailureListener(e -> {
+                    Toast.makeText(DashboardActivity.this, "Failed to upload audio file", Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.GONE);
                 });
     }
 

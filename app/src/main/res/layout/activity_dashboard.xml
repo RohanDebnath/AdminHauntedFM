@@ -47,6 +47,12 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/selectAudioButton"
         android:text="Upload Audio" />
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressbar2"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
 
     <TextView
         android:id="@+id/audioListTextView"

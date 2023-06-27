@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageViewPlaylist;
     private Uri selectedImageUri;
     private Button btnSelectImage,Dashboard;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
         imageViewPlaylist = findViewById(R.id.imageViewPlaylist);
         btnSelectImage = findViewById(R.id.btnSelectImage);
         Dashboard=findViewById(R.id.dahboard);
+        progressBar=findViewById(R.id.ProgressBarMain);
+
 
         Dashboard.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -168,6 +172,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Upload the image to Firebase Storage
         if (selectedImageUri != null) {
+            progressBar.setVisibility(View.VISIBLE);
             String imageName = "playlist_" + playlistId;
             StorageReference imageRef = FirebaseStorage.getInstance().getReference().child("images/" + imageName);
 
@@ -189,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
                                                 playlistNameEditText.setText("");
                                                 playlistDescriptionEditText.setText("");
                                                 imageViewPlaylist.setImageResource(R.drawable.ic_launcher_foreground); // Reset the image view
+                                                progressBar.setVisibility(View.GONE);
                                                 Toast.makeText(MainActivity.this, "Playlist added", Toast.LENGTH_SHORT).show();
                                             })
                                             .addOnFailureListener(e -> {
@@ -204,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
                         // Error occurred while uploading the image
                         Toast.makeText(MainActivity.this, "Error uploading image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
+
         } else {
             // Add the playlist to Firestore without an image
             playlistCollection.document(playlistId)
