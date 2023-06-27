@@ -1,11 +1,13 @@
 package com.example.adminhauntedfm;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -16,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,7 +39,7 @@ public class DashboardActivity extends AppCompatActivity implements AdapterView.
     private static final int REQUEST_CODE_AUDIO = 1;
     private Spinner playlistSpinner;
     private EditText audioNameEditText, audioDescriptionEditText;
-    private Button selectAudioButton, uploadButton;
+    private Button selectAudioButton, uploadButton, refreshbutton;
     private RecyclerView recyclerView;
 
     private FirebaseFirestore firebaseFirestore;
@@ -73,11 +76,13 @@ public class DashboardActivity extends AppCompatActivity implements AdapterView.
             @Override
             public void onEditClick(AudioItem audioItem) {
                 // Handle edit click event
+                editAudioItem(audioItem);
             }
 
             @Override
             public void onDeleteClick(AudioItem audioItem) {
                 // Handle delete click event
+                deleteAudioItem(audioItem);
             }
         });
         recyclerView.setAdapter(audioAdapter);
@@ -181,14 +186,24 @@ public class DashboardActivity extends AppCompatActivity implements AdapterView.
                             // Create a new AudioItem object with the given name and description
                             AudioItem audioItem = new AudioItem(audioName, audioDescription, selectedAudioFilePath);
 
+                            // Generate a unique ID for the audio item
+                            String audioItemId = firebaseFirestore.collection("playlists")
+                                    .document(playlistId)
+                                    .collection("audioFiles")
+                                    .document().getId();
+
+                            // Set the generated ID for the audio item
+                            audioItem.setId(audioItemId);
+
                             // Upload the audio item to the selected playlist
                             firebaseFirestore.collection("playlists")
                                     .document(playlistId)
                                     .collection("audioFiles")
-                                    .add(audioItem)
-                                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                    .document(audioItemId)
+                                    .set(audioItem)
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
                                         @Override
-                                        public void onSuccess(DocumentReference documentReference) {
+                                        public void onSuccess(Void aVoid) {
                                             Toast.makeText(DashboardActivity.this, "Audio uploaded successfully", Toast.LENGTH_SHORT).show();
                                             audioNameEditText.setText("");
                                             audioDescriptionEditText.setText("");
@@ -287,4 +302,137 @@ public class DashboardActivity extends AppCompatActivity implements AdapterView.
         }
         return filePath;
     }
+    private void deleteAudioItem(AudioItem audioItem) {
+        // Delete the selected audio item from Firestore
+        firebaseFirestore.collection("playlists")
+                .whereEqualTo("name", selectedPlaylist)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                            String playlistId = queryDocumentSnapshots.getDocuments().get(0).getId();
+
+                            firebaseFirestore.collection("playlists")
+                                    .document(playlistId)
+                                    .collection("audioFiles")
+                                    .document(audioItem.getId())
+                                    .delete()
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            Toast.makeText(DashboardActivity.this, "Audio deleted successfully", Toast.LENGTH_SHORT).show();
+                                            loadAudioItems();
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Toast.makeText(DashboardActivity.this, "Failed to delete audio", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(DashboardActivity.this, "Failed to get playlist ID", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+    private void editAudioItem(AudioItem audioItem) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(DashboardActivity.this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_audio, null);
+        EditText editTitleEditText = dialogView.findViewById(R.id.editTitleEditText);
+        EditText editDescriptionEditText = dialogView.findViewById(R.id.editDescriptionEditText);
+        Button updateButton = dialogView.findViewById(R.id.updateButton);
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+
+        // Set the current title and description in the edit text fields
+        editTitleEditText.setText(audioItem.getAudioName());
+        editDescriptionEditText.setText(audioItem.getAudioDescription());
+
+        builder.setView(dialogView);
+        AlertDialog dialog = builder.create();
+
+        // Update button click listener
+        updateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String newTitle = editTitleEditText.getText().toString().trim();
+                String newDescription = editDescriptionEditText.getText().toString().trim();
+
+                if (TextUtils.isEmpty(newTitle)) {
+                    editTitleEditText.setError("Please enter a title");
+                    return;
+                }
+
+                if (TextUtils.isEmpty(newDescription)) {
+                    editDescriptionEditText.setError("Please enter a description");
+                    return;
+                }
+
+                // Update the title and description of the audio item
+                audioItem.setAudioName(newTitle);
+                audioItem.setAudioDescription(newDescription);
+
+                // Save the updated audio item to Firestore
+                saveAudioItem(audioItem);
+
+                dialog.dismiss();
+            }
+        });
+
+        // Cancel button click listener
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
+    private void saveAudioItem(AudioItem audioItem) {
+        // Get the selected playlist document ID
+        firebaseFirestore.collection("playlists")
+                .whereEqualTo("name", selectedPlaylist)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                            String playlistId = queryDocumentSnapshots.getDocuments().get(0).getId();
+
+                            // Update the audio item in Firestore
+                            firebaseFirestore.collection("playlists")
+                                    .document(playlistId)
+                                    .collection("audioFiles")
+                                    .document(audioItem.getId())
+                                    .set(audioItem)
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            Toast.makeText(DashboardActivity.this, "Audio updated successfully", Toast.LENGTH_SHORT).show();
+                                            loadAudioItems();
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Toast.makeText(DashboardActivity.this, "Failed to update audio", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(DashboardActivity.this, "Failed to get playlist ID", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
 }
