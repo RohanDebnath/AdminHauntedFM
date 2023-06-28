@@ -7,6 +7,8 @@
     android:padding="16dp">
 
     <Spinner
+        android:padding="8dp"
+        android:layout_margin="8dp"
         android:id="@+id/playlistSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -19,12 +21,18 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/playlistSpinner"
         android:hint="Audio Name"
-        android:inputType="text" />
+        android:background="@drawable/custom_edittext"
+        android:inputType="text"
+        android:padding="8dp"
+        android:layout_margin="8dp"/>
 
     <EditText
+        android:padding="8dp"
+        android:layout_margin="8dp"
         android:id="@+id/audioDescriptionEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/custom_edittext"
         android:layout_below="@id/audioNameEditText"
         android:hint="Audio Description"
         android:inputType="text" />
@@ -33,11 +41,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Selected Audio: "
-        android:textSize="16sp" />
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:padding="8dp"
+        android:layout_margin="8dp"/>
     <Button
         android:id="@+id/selectAudioButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:backgroundTint="@color/purple"
+        android:textColor="@color/black"
+        android:textAllCaps="false"
         android:layout_below="@id/audioDescriptionEditText"
         android:text="Select Audio" />
 
@@ -46,7 +60,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/selectAudioButton"
-        android:text="Upload Audio" />
+        android:text="Upload Audio"
+        android:textAllCaps="false"
+        android:backgroundTint="@color/purple"
+        android:textColor="@color/black"/>
     <ProgressBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -62,13 +79,18 @@
         android:layout_marginTop="16dp"
         android:text="Audio List"
         android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:padding="8dp"
+        android:layout_margin="8dp"
+        />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/audioRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="275dp"
         android:layout_below="@id/audioListTextView"
-        android:layout_marginTop="8dp" />
+        android:layout_margin="8dp"
+        android:layout_marginTop="8dp"
+        android:padding="8dp" />
 
 </LinearLayout>

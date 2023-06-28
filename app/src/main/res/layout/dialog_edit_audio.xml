@@ -19,6 +19,8 @@
         android:layout_height="wrap_content"
         android:hint="Title"
         android:padding="16dp"
+        android:background="@drawable/custom_edittext"
+        android:layout_margin="8dp"
         android:inputType="text"
         android:maxLines="1"/>
 
@@ -27,6 +29,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Description"
+        android:background="@drawable/custom_edittext"
+        android:layout_margin="8dp"
         android:padding="16dp"
         android:inputType="textMultiLine"
         android:maxLines="4"/>
@@ -42,9 +46,11 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Update"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="@color/purple"
+            android:textAllCaps="false"
+            android:layout_margin="8dp"
             android:textColor="@android:color/black"
-            android:padding="16dp"/>
+            android:padding="8dp"/>
 
         <Button
             android:id="@+id/cancelButton"
@@ -52,9 +58,12 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Cancel"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="@color/purple"
             android:textColor="@android:color/black"
-            android:padding="16dp"/>
+            android:padding="8dp"
+            android:textAllCaps="false"
+            android:layout_margin="8dp"
+            />
 
     </LinearLayout>
 

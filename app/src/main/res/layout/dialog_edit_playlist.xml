@@ -10,21 +10,26 @@
         android:text="Edit Playlist"
         android:textAppearance="?android:textAppearanceMedium"
         android:gravity="center"
-        android:padding="16dp" />
+        android:padding="16dp"
+        android:textStyle="bold"/>
 
     <EditText
         android:id="@+id/editPlaylistNameEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Enter playlist name"
-        android:padding="16dp" />
+        android:background="@drawable/custom_edittext"
+        android:padding="16dp"
+        android:layout_margin="8dp"/>
 
     <EditText
         android:id="@+id/editPlaylistDescriptionEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Enter playlist description"
-        android:padding="16dp" />
+        android:padding="16dp"
+        android:background="@drawable/custom_edittext"
+        android:layout_margin="8dp"/>
 
     <TextView
         android:id="@+id/editPlaylistImageTextView"
@@ -50,6 +55,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Select Image"
+        android:backgroundTint="@color/purple"
+        android:textAllCaps="false"
+        android:textColor="@color/black"
         android:layout_gravity="center"
         android:layout_marginTop="16dp" />
 
